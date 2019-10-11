@@ -11,7 +11,7 @@ win = psychopy.visual.Window(
 
 img = psychopy.visual.ImageStim(
     win=win,
-    image="stim.png",
+    image="stim_use.png",
     units="pix"
 )
 
