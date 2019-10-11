@@ -30,13 +30,14 @@ def textScreen(text, keyList, timeOut):
 
 # get the current working directory
 fullPath = os.getcwd()
-
+dataPath = os.path.join(fullPath, 'output')
 
 # open the edf data file
 # Note that the file name cannot exceeds 8 characters
 # please open eyelink data files early to record as much info as possible
-if not os.path.exists(dataFolder): os.makedirs(dataFolder)
-dataFileName = 'ilkertry_' + str(subNum) + '.EDF'
+if not os.path.exists(dataFolder):
+        os.makedirs(dataFolder)
+dataFileName = 'iy_test.EDF'
 tk.openDataFile(dataFileName)
 
 # Initialize custom graphics for camera setup & drift correction
@@ -134,17 +135,46 @@ img = psychopy.visual.ImageStim(
     units="pix"
 )
 
+# ------- INSTRUCTIONS & PRACTICE ------ #
+#textScreen("Enter text here.",'space',0)
+
+
+# close the EDF data file
+tk.setOfflineMode()
+# send message to eyetracker
+tk.sendMessage('TRIALID_' + str(t))
+
+# start recording, parameters specify whether events and samples are
+# stored in file, and available over the link
+error = tk.startRecording(1,1,1,1)
+pylink.pumpDelay(100) # wait for 100 ms to make sure data of interest is recorded
+    
+#determine which eye(s) are available
+eyeTracked = tk.eyeAvailable() 
+if eyeTracked==2: eyeTracked = 1
+
+tFin = tSetUp.getTime()
+
 img.draw()
 
 win.flip()
 
+"""
+dt = tk.getNewestSample()
+if (dt != None):
+        if eyeTracked == 1 and dt.isRightSample():
+                gazePos = dt.getRightEye().getGaze()
+"""
+
+tk.sendMessage('image_onset')
+
 psychopy.event.waitKeys()
 
-
-
-
-# ------- INSTRUCTIONS & PRACTICE ------ #
-#textScreen("Enter text here.",'space',0)
+# send a message to mark the end of trial
+# [see Data Viewer User Manual, Section 7: Protocol for EyeLink Data to Viewer Integration]
+tk.sendMessage('TRIAL_RESULT')
+pylink.pumpDelay(100)
+tk.stopRecording() # stop recording
 
 
 # close the EDF data file
