@@ -137,7 +137,7 @@ win = visual.Window(fullscr=True, allowGUI=False,
 
 
 
-msg = visual.TextStim(win, color='black', text = 'You will be presented with an image of a scene consisting of multiple objects. At some point, your perceived shape of the objects in the scene will change. Press space bar when that happens. Also press space bar if you believe you have seen the image before.')
+msg = visual.TextStim(win, color='black', text = 'You will be presented with an image of a scene consisting of multiple objects. At some point, your perceived shape of the objects in the scene will change. Press space bar when that happens. Also press space bar if you believe you have seen the image before. \n\n Now press space bar to proceed.')
 msg.draw()
 win.flip()
 event.waitKeys()
