@@ -13,8 +13,6 @@ from PIL import Image
 
 tk = pylink.EyeLink('100.1.1.1') #ip address for the eyetracker
 
-
-
 # a function for presenting text
 def textScreen(text, keyList, timeOut):
 	textStim.setText(text)
@@ -35,9 +33,18 @@ dataPath = os.path.join(fullPath, 'output')
 # open the edf data file
 # Note that the file name cannot exceeds 8 characters
 # please open eyelink data files early to record as much info as possible
-if not os.path.exists(dataFolder):
-        os.makedirs(dataFolder)
-dataFileName = 'iy_test.EDF'
+if not os.path.exists(dataPath):
+        os.makedirs(dataPath)
+
+try:
+        id = numpy.load(os.path.join(dataPath, 'subjectcounter.npy'))[0]
+        numpy.save(os.path.join(dataPath, 'subjectcounter.npy'), np.array([id + 1]))
+except:
+        id = 0
+        numpy.save(os.path.join(dataPath, 'subjectcounter.npy'), np.array([id + 1]))
+        
+
+dataFileName = 'iy_' + str(id) + '.EDF'
 tk.openDataFile(dataFileName)
 
 # Initialize custom graphics for camera setup & drift correction
@@ -130,12 +137,12 @@ win = visual.Window(fullscr=True, allowGUI=False,
 
 
 
-msg = visual.TextStim(win, text = 'You will be presented with an image of a scene consisting of multiple objects. At some point, your perceived shape of the objects in the scene will change. Press space bar when that happens. Also press space bar if you believe you have seen the image before.')
+msg = visual.TextStim(win, color='black', text = 'You will be presented with an image of a scene consisting of multiple objects. At some point, your perceived shape of the objects in the scene will change. Press space bar when that happens. Also press space bar if you believe you have seen the image before.')
 msg.draw()
 win.flip()
 event.waitKeys()
 
-textStim = visual.TextStim(win, color='black', pos=(0, 0), height=32, wrapWidth=800, font = 'Helvetica')
+#textStim = visual.TextStim(win, color='black', pos=(0, 0), height=32, wrapWidth=800, font = 'Helvetica')
 
 img = psychopy.visual.ImageStim(
     win=win,
@@ -162,7 +169,6 @@ eyeTracked = tk.eyeAvailable()
 if eyeTracked==2:
         eyeTracked = 1
 
-tFin = tSetUp.getTime()
 
 img.draw()
 
@@ -189,13 +195,14 @@ tk.stopRecording() # stop recording
 # close the EDF data file
 tk.setOfflineMode()
 tk.closeDataFile()
-pylink.pumpDelay(50)
+pylink.pumpDelay(100)
 
 # Get the EDF data and say goodbye
 msg.text='Data transfering.....'
 msg.draw()
 win.flip()
-tk.receiveDataFile(dataFileName, dataFolder + dataFileName)
+tk.receiveDataFile(dataFileName, os.path.join(dataPath, dataFileName))
+pylink.pumpDelay(100)
 
 #close the link to the tracker
 tk.close()
