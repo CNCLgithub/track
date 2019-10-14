@@ -127,6 +127,14 @@ tk.doTrackerSetup()
 win = visual.Window(fullscr=True, allowGUI=False,
                     units='pix', winType = 'pyglet',
                     colorSpace='rgb255',color=[255,255,255])
+
+
+
+msg = visual.TextStim(win, text = 'You will be presented with an image of a scene consisting of multiple objects. At some point, your perceived shape of the objects in the scene will change. Press space bar when that happens. Also press space bar if you believe you have seen the image before.')
+msg.draw()
+win.flip()
+event.waitKeys()
+
 textStim = visual.TextStim(win, color='black', pos=(0, 0), height=32, wrapWidth=800, font = 'Helvetica')
 
 img = psychopy.visual.ImageStim(
@@ -142,7 +150,7 @@ img = psychopy.visual.ImageStim(
 # close the EDF data file
 tk.setOfflineMode()
 # send message to eyetracker
-tk.sendMessage('TRIALID_' + str(t))
+tk.sendMessage('TRIALID_1')
 
 # start recording, parameters specify whether events and samples are
 # stored in file, and available over the link
@@ -151,7 +159,8 @@ pylink.pumpDelay(100) # wait for 100 ms to make sure data of interest is recorde
     
 #determine which eye(s) are available
 eyeTracked = tk.eyeAvailable() 
-if eyeTracked==2: eyeTracked = 1
+if eyeTracked==2:
+        eyeTracked = 1
 
 tFin = tSetUp.getTime()
 
