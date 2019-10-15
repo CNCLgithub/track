@@ -4,26 +4,28 @@ import psychopy
 
 from psychopy import visual, core, event, data, monitors
 import random, time, math, datetime
-import numpy #can't be imported as np bc of pylink compatibility
+import numpy  # can't be imported as np bc of pylink compatibility
 import os
 import copy
 import pylink
 from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
 from PIL import Image
 
-tk = pylink.EyeLink('100.1.1.1') #ip address for the eyetracker
+tk = pylink.EyeLink('100.1.1.1')  # ip address for the eyetracker
+stim_id = 0
+
 
 # a function for presenting text
 def textScreen(text, keyList, timeOut):
-	textStim.setText(text)
-	textStim.draw()
-	win.flip()
-	if timeOut == 0:
-		event.waitKeys(maxWait=float('inf'),keyList=keyList)
-	else:
-		timer.reset()
-		while timer.getTime()<timeOut:
-			pass
+    textStim.setText(text)
+    textStim.draw()
+    win.flip()
+    if timeOut == 0:
+        event.waitKeys(maxWait=float('inf'), keyList=keyList)
+    else:
+        timer.reset()
+        while timer.getTime() < timeOut:
+            pass
 
 
 # get the current working directory
@@ -34,17 +36,16 @@ dataPath = os.path.join(fullPath, 'output')
 # Note that the file name cannot exceeds 8 characters
 # please open eyelink data files early to record as much info as possible
 if not os.path.exists(dataPath):
-        os.makedirs(dataPath)
+    os.makedirs(dataPath)
 
 try:
-        id = numpy.load(os.path.join(dataPath, 'subjectcounter.npy'))[0]
-        numpy.save(os.path.join(dataPath, 'subjectcounter.npy'), numpy.array([id + 1]))
+    subj_id = numpy.load(os.path.join(dataPath, 'subjectcounter.npy'))[0]
+    numpy.save(os.path.join(dataPath, 'subjectcounter.npy'), numpy.array([subj_id + 1]))
 except:
-        id = 0
-        numpy.save(os.path.join(dataPath, 'subjectcounter.npy'), numpy.array([id + 1]))
-        
+    subj_id = 0
+    numpy.save(os.path.join(dataPath, 'subjectcounter.npy'), numpy.array([subj_id + 1]))
 
-dataFileName = 'iy_' + str(id) + '.EDF'
+dataFileName = 'subj_' + str(subj_id) + '_stim_' + str(stim_id) + '.EDF'
 tk.openDataFile(dataFileName)
 
 # Initialize custom graphics for camera setup & drift correction
@@ -56,7 +57,7 @@ scnWidth, scnHeight = (1920, 1080)
 mon = monitors.Monitor('dell27', width=60.0, distance=60.0)
 mon.setSizePix((scnWidth, scnHeight))
 win = visual.Window((scnWidth, scnHeight), fullscr=True,
-                    monitor=mon, color=[0,0,0], units='pix',
+                    monitor=mon, color=[0, 0, 0], units='pix',
                     allowStencil=True, autoLog=False)
 
 # call the custom calibration routine "EyeLinkCoreGraphicsPsychopy.py", instead of the default
@@ -73,18 +74,18 @@ tk.sendCommand('sample_rate 500')
 
 # inform the tracker the resolution of the subject display
 # [see Eyelink Installation Guide, Section 8.4: Customizing Your PHYSICAL.INI Settings ]
-tk.sendCommand("screen_pixel_coords = 0 0 %d %d" % (scnWidth-1, scnHeight-1))
+tk.sendCommand("screen_pixel_coords = 0 0 %d %d" % (scnWidth - 1, scnHeight - 1))
 
 # save display resolution in EDF data file for Data Viewer integration purposes
 # [see Data Viewer User Manual, Section 7: Protocol for EyeLink Data to Viewer Integration]
-tk.sendMessage("DISPLAY_COORDS = 0 0 %d %d" % (scnWidth-1, scnHeight-1))
+tk.sendMessage("DISPLAY_COORDS = 0 0 %d %d" % (scnWidth - 1, scnHeight - 1))
 
 # specify the calibration type, H3, HV3, HV5, HV13 (HV = horiztonal/vertical), 
-tk.sendCommand("calibration_type = HV9") # tk.setCalibrationType('HV9') also works, see the Pylink manual
+tk.sendCommand("calibration_type = HV9")  # tk.setCalibrationType('HV9') also works, see the Pylink manual
 
 # specify the proportion of subject display to calibrate/validate (OPTIONAL, useful for wide screen monitors)
-#tk.sendCommand("calibration_area_proportion 0.85 0.83")
-#tk.sendCommand("validation_area_proportion  0.85 0.83")
+# tk.sendCommand("calibration_area_proportion 0.85 0.83")
+# tk.sendCommand("validation_area_proportion  0.85 0.83")
 
 # Using a button from the EyeLink Host PC gamepad to accept calibration/dirft check target (optional)
 # tk.sendCommand("button_function 5 'accept_target_fixation'")
@@ -92,7 +93,7 @@ tk.sendCommand("calibration_type = HV9") # tk.setCalibrationType('HV9') also wor
 # the model of the tracker, 1-EyeLink I, 2-EyeLink II, 3-Newer models (100/1000Plus/DUO)
 eyelinkVer = tk.getTrackerVersion()
 
-#turn off scenelink camera stuff (EyeLink II/I only)
+# turn off scenelink camera stuff (EyeLink II/I only)
 if eyelinkVer == 2: tk.sendCommand("scene_camera_gazemap = NO")
 
 # Set the tracker to parse Events using "GAZE" (or "HREF") data
@@ -101,12 +102,12 @@ tk.sendCommand("recording_parse_type = GAZE")
 # Online parser configuration: 0-> standard/coginitve, 1-> sensitive/psychophysiological
 # the Parser for EyeLink I is more conservative, see below
 # [see Eyelink User Manual, Section 4.3: EyeLink Parser Configuration]
-if eyelinkVer>=2: tk.sendCommand('select_parser_configuration 0')
+if eyelinkVer >= 2: tk.sendCommand('select_parser_configuration 0')
 
 # get Host tracking software version
 hostVer = 0
 if eyelinkVer == 3:
-    tvstr  = tk.getTrackerVersionString()
+    tvstr = tk.getTrackerVersionString()
     vindex = tvstr.find("EYELINK CL")
     hostVer = int(float(tvstr[(vindex + len("EYELINK CL")):].strip()))
 
@@ -115,15 +116,15 @@ if eyelinkVer == 3:
 # and thus the 'HTARGET' data; for link data, the 'FIXUPDATE' event can be useful for HCI applications
 tk.sendCommand("file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT")
 tk.sendCommand("link_event_filter = LEFT,RIGHT,FIXATION,FIXUPDATE,SACCADE,BLINK,BUTTON,INPUT")
-if hostVer >=4:
-	tk.sendCommand("file_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,HTARGET,INPUT")
-	tk.sendCommand("link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,HTARGET,INPUT")
+if hostVer >= 4:
+    tk.sendCommand("file_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,HTARGET,INPUT")
+    tk.sendCommand("link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,HTARGET,INPUT")
 else:
-	tk.sendCommand("file_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,INPUT")
-	tk.sendCommand("link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,INPUT")
+    tk.sendCommand("file_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,INPUT")
+    tk.sendCommand("link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,INPUT")
 
 # show some instructions here.
-msg = visual.TextStim(win, text = 'Press ENTER twice to calibrate the tracker')
+msg = visual.TextStim(win, text='Press ENTER three times to calibrate the tracker')
 msg.draw()
 win.flip()
 event.waitKeys()
@@ -132,26 +133,29 @@ event.waitKeys()
 tk.doTrackerSetup()
 
 win = visual.Window(fullscr=True, allowGUI=False,
-                    units='pix', winType = 'pyglet',
-                    colorSpace='rgb255',color=[255,255,255])
+                    units='pix', winType='pyglet',
+                    colorSpace='rgb255', color=[255, 255, 255])
 
-
-
-msg = visual.TextStim(win, color='black', text = 'You will be presented with an image of a scene consisting of multiple objects. At some point, your perceived shape of the objects in the scene will change. Press space bar when that happens. Also press space bar if you believe you have seen the image before (and let the experimenter know). \n\nNow press space bar to proceed.')
+msg = visual.TextStim(win, color='black',
+                      text='You will be presented with an image of a scene consisting of multiple objects. \
+                      At some point, your perceived shape of the objects in the scene will change. \
+                      Press space bar when that happens. Also press space bar if you believe you have seen the image \
+                      before (and let the experimenter know). \n\nNow press space bar to proceed.')
 msg.draw()
 win.flip()
 event.waitKeys()
 
-#textStim = visual.TextStim(win, color='black', pos=(0, 0), height=32, wrapWidth=800, font = 'Helvetica')
+# textStim = visual.TextStim(win, color='black', pos=(0, 0), height=32, wrapWidth=800, font = 'Helvetica')
+stim_image = 'stimuli/stim_' + str(stim_id) + '.png'
 
 img = psychopy.visual.ImageStim(
     win=win,
-    image="stim_use.png",
+    image=stim_image,
     units="pix"
 )
 
 # ------- INSTRUCTIONS & PRACTICE ------ #
-#textScreen("Enter text here.",'space',0)
+# textScreen("Enter text here.",'space',0)
 
 
 # close the EDF data file
@@ -161,14 +165,13 @@ tk.sendMessage('TRIALID_1')
 
 # start recording, parameters specify whether events and samples are
 # stored in file, and available over the link
-error = tk.startRecording(1,1,1,1)
-pylink.pumpDelay(100) # wait for 100 ms to make sure data of interest is recorded
-    
-#determine which eye(s) are available
-eyeTracked = tk.eyeAvailable() 
-if eyeTracked==2:
-        eyeTracked = 1
+error = tk.startRecording(1, 1, 1, 1)
+pylink.pumpDelay(100)  # wait for 100 ms to make sure data of interest is recorded
 
+# determine which eye(s) are available
+eyeTracked = tk.eyeAvailable()
+if eyeTracked == 2:
+    eyeTracked = 1
 
 img.draw()
 
@@ -189,8 +192,7 @@ psychopy.event.waitKeys()
 # [see Data Viewer User Manual, Section 7: Protocol for EyeLink Data to Viewer Integration]
 tk.sendMessage('TRIAL_RESULT')
 pylink.pumpDelay(100)
-tk.stopRecording() # stop recording
-
+tk.stopRecording()  # stop recording
 
 # close the EDF data file
 tk.setOfflineMode()
@@ -198,19 +200,16 @@ tk.closeDataFile()
 pylink.pumpDelay(100)
 
 # Get the EDF data and say goodbye
-msg.text='Data transfering.....'
+msg.text = 'Data transfering.....'
 msg.draw()
 win.flip()
 tk.receiveDataFile(dataFileName, os.path.join(dataPath, dataFileName))
 pylink.pumpDelay(100)
 
-#close the link to the tracker
+# close the link to the tracker
 tk.close()
 
 # close the graphics
 pylink.closeGraphics()
 win.close()
 core.quit()
-
-
-
