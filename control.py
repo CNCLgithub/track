@@ -12,7 +12,11 @@ from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
 from PIL import Image
 
 tk = pylink.EyeLink('100.1.1.1')  # ip address for the eyetracker
-stim_id = 0
+stim_id = 3
+
+# get the current working directory
+fullPath = os.getcwd()
+dataPath = os.path.join(fullPath, 'output')
 
 
 # a function for presenting text
@@ -28,10 +32,6 @@ def textScreen(text, keyList, timeOut):
             pass
 
 
-# get the current working directory
-fullPath = os.getcwd()
-dataPath = os.path.join(fullPath, 'output')
-
 # open the edf data file
 # Note that the file name cannot exceeds 8 characters
 # please open eyelink data files early to record as much info as possible
@@ -45,7 +45,7 @@ except:
     subj_id = 0
     numpy.save(os.path.join(dataPath, 'subjectcounter.npy'), numpy.array([subj_id + 1]))
 
-dataFileName = 'subj_' + str(subj_id) + '_stim_' + str(stim_id) + '.EDF'
+dataFileName = 'subj_' + str(subj_id) + '_' + str(stim_id) + '.EDF'
 tk.openDataFile(dataFileName)
 
 # Initialize custom graphics for camera setup & drift correction
@@ -137,10 +137,7 @@ win = visual.Window(fullscr=True, allowGUI=False,
                     colorSpace='rgb255', color=[255, 255, 255])
 
 msg = visual.TextStim(win, color='black',
-                      text='You will be presented with an image of a scene consisting of multiple objects. \
-                      At some point, your perceived shape of the objects in the scene will change. \
-                      Press space bar when that happens. Also press space bar if you believe you have seen the image \
-                      before (and let the experimenter know). \n\nNow press space bar to proceed.')
+                      text='You will be presented with an image of a scene consisting of multiple objects. At some point, your perceived shape of the objects in the scene will change. Press space bar when that happens. Also press space bar if you believe you have seen the image before (and let the experimenter know). \n\nNow press space bar to proceed.')
 msg.draw()
 win.flip()
 event.waitKeys()
@@ -153,6 +150,7 @@ img = psychopy.visual.ImageStim(
     image=stim_image,
     units="pix"
 )
+# img.pos += (0, 150)
 
 # ------- INSTRUCTIONS & PRACTICE ------ #
 # textScreen("Enter text here.",'space',0)
@@ -200,7 +198,7 @@ tk.closeDataFile()
 pylink.pumpDelay(100)
 
 # Get the EDF data and say goodbye
-msg.text = 'Data transfering.....'
+msg.text = 'Data transferring.....'
 msg.draw()
 win.flip()
 tk.receiveDataFile(dataFileName, os.path.join(dataPath, dataFileName))
