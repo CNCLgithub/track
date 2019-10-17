@@ -125,7 +125,7 @@ else:
     tk.sendCommand("link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,PUPIL,HREF,AREA,STATUS,INPUT")
 
 # show some instructions here.
-msg = visual.TextStim(win, text='Press ENTER three times to calibrate the tracker')
+msg = visual.TextStim(win, text='Press ENTER twice (or sometimes three times) to calibrate the tracker')
 msg.draw()
 win.flip()
 event.waitKeys()
